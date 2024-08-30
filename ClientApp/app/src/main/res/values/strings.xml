@@ -8,4 +8,7 @@
     <string name="login">Login</string>
     <string name="register">Register</string>
     <string name="remember_me">Remember me</string>
+    <string name="name">Name</string>
+    <string name="edit_icon">Edit Icon</string>
+    <string name="avatar">Avatar</string>
 </resources>

@@ -126,8 +126,8 @@
                 android:layout_width="60dp"
                 android:layout_height="60dp"
                 android:background="@drawable/circular_gradient_button_not_active"
-                android:backgroundTint="#40C4FF"
                 android:contentDescription="@string/login"
+                android:enabled="false"
                 android:src="@drawable/outline_arrow_forward"
                 android:text="@string/login"
                 android:textSize="@dimen/normal_text_size" />
