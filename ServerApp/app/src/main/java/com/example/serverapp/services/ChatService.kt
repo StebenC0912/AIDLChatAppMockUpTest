@@ -3,11 +3,15 @@ package com.example.serverapp.services
 import android.app.Service
 import android.content.Intent
 import android.os.IBinder
+import android.util.Log
 import com.example.serverapp.ChatServiceInterface
 import com.example.serverapp.data.database.ServerDatabase
 import com.example.serverapp.data.repositories.ServerRepository
 import com.example.serverapp.models.User
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
 class ChatService : Service() {
@@ -17,6 +21,11 @@ class ChatService : Service() {
         super.onCreate()
         val userDao = ServerDatabase.getInstance(this).userDao()
         serverRepository = ServerRepository(userDao)
+        CoroutineScope(Dispatchers.IO).launch {
+            val users = serverRepository.getAllUsers().first().toMutableList()
+            Log.d("test", "onCreate: $users")
+        }
+        
     }
     
     override fun onBind(p0: Intent?): IBinder {
@@ -41,5 +50,12 @@ class ChatService : Service() {
                 }
             }
         }
+        
+        override fun login(username: String?, password: String?): User {
+            return runBlocking {
+                serverRepository.login(username!!, password!!)
+            }
+        }
+        
     }
 }
