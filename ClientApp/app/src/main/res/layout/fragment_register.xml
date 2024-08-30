@@ -1,13 +1,109 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     tools:context=".ui.RegisterFragment">
 
-    <TextView
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment" />
+        android:layout_height="wrap_content">
 
-</FrameLayout>
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/rectangle_background"
+            android:scaleType="fitXY"
+            android:src="@drawable/rectangle" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="@dimen/normal_layout"
+            android:paddingTop="54dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/normal_layout"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/loginButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:backgroundTint="@color/white"
+                    android:drawableLeft="@drawable/baseline_arrow_back"
+                    android:text="@string/login"
+                    android:textColor="#1565C0"
+                    android:textSize="@dimen/normal_text_size"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/registerTextView"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/register"
+                    android:textAlignment="textEnd"
+                    android:textColor="@color/white"
+                    android:textSize="36sp"
+                    android:textStyle="bold" />
+
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/enterYourEmailAndPasswordTextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/enter_your_email_and_password"
+                android:textAlignment="textEnd"
+                android:textColor="@color/white"
+                android:textSize="28sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </FrameLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="@dimen/normal_layout">
+
+        <EditText
+            android:id="@+id/usernameEditText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/normal_layout"
+            android:autofillHints="username"
+            android:hint="@string/username"
+            android:inputType="textEmailAddress"
+            android:textSize="24sp" />
+
+        <EditText
+            android:id="@+id/passwordEditText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginVertical="@dimen/normal_layout"
+            android:autofillHints="password"
+            android:hint="@string/password"
+            android:inputType="textPassword"
+            android:textSize="24sp" />
+
+        <ImageButton
+            android:layout_gravity="end"
+            android:id="@+id/registerButton"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:background="@drawable/circular_gradient_button_not_active"
+            android:backgroundTint="#40C4FF"
+            android:contentDescription="@string/login"
+            android:src="@drawable/outline_arrow_forward"
+            android:text="@string/login"
+            android:textSize="@dimen/normal_text_size" />
+    </LinearLayout>
+</LinearLayout>
