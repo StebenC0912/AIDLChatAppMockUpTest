@@ -41,6 +41,7 @@
                     android:textStyle="bold" />
 
                 <Button
+                    android:id="@+id/registerButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:backgroundTint="@color/white"
@@ -67,6 +68,7 @@
         android:paddingHorizontal="@dimen/normal_layout">
 
         <EditText
+            android:id="@+id/usernameEditText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginVertical="@dimen/normal_layout"
@@ -76,6 +78,7 @@
             android:textSize="24sp" />
 
         <EditText
+            android:id="@+id/passwordEditText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginVertical="@dimen/normal_layout"
@@ -92,10 +95,12 @@
             android:orientation="horizontal">
 
             <CheckBox
+                android:id="@+id/checkbox"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
 
             <TextView
+                android:id="@+id/rememberMeTextView"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
@@ -104,6 +109,7 @@
                 android:textStyle="bold" />
 
             <ImageButton
+                android:id="@+id/loginButton"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
                 android:background="@drawable/circular_gradient_button_not_active"
