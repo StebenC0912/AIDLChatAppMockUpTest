@@ -12,4 +12,8 @@ class ServerRepository(
     fun addUser(user: User) {
         userDao.addUser(user)
     }
+    
+    fun getUserByUsername(username: String): Boolean {
+        return userDao.getUserByUsername(username)
+    }
 }

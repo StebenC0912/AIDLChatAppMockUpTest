@@ -71,7 +71,7 @@
                     android:layout_width="140dp"
                     android:layout_height="140dp"
                     android:padding="5dp"
-                    android:src="@drawable/flat_rectangle"
+                    android:src="@drawable/baseline_person"
                     app:shapeAppearanceOverlay="@style/circleImageView"
                     app:strokeColor="@color/white"
                     app:strokeWidth="5dp" />

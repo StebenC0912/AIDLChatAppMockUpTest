@@ -114,6 +114,7 @@ class LoginFragment : Fragment() {
             val user = viewModel.login(username, password)
             if (user != null) {
                 Toast.makeText(context, "Login successful", Toast.LENGTH_SHORT).show()
+                saveLoginInfoToSharedPreferences(user.id)
             } else {
                 Toast.makeText(context, "Login failed", Toast.LENGTH_SHORT).show()
             }
@@ -121,6 +122,13 @@ class LoginFragment : Fragment() {
             Toast.makeText(context, "Please enter both username and password", Toast.LENGTH_SHORT)
                 .show()
         }
+    }
+    
+    private fun saveLoginInfoToSharedPreferences(userId: Int) {
+        val sharedPreferences = requireContext().getSharedPreferences("login_prefs", 0)
+        val editor = sharedPreferences.edit()
+        editor.putInt("User Id", userId)
+        editor.apply()
     }
     
     override fun onDestroyView() {

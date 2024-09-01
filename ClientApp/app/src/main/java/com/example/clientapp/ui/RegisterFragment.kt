@@ -8,6 +8,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
@@ -23,13 +24,16 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class RegisterFragment : Fragment() {
     private val viewModel: MainViewModel by activityViewModels()
+    private var profileImageUri: Uri =
+        Uri.parse("android.resource://com.example.clientapp/drawable/default_vector_image")
     private var _binding: FragmentRegisterBinding? = null
     private val binding get() = _binding!!
     private val pickMedia =
         registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri: Uri? ->
             if (uri != null) {
                 Log.d("PhotoPicker", "Selected URI: $uri")
-                displaySelectedPhoto(uri) // Display the selected photo
+                profileImageUri = uri
+                displaySelectedPhoto(uri)
             } else {
                 Log.d("PhotoPicker", "No media selected")
             }
@@ -97,21 +101,25 @@ class RegisterFragment : Fragment() {
         val name = binding.nameEditText.text.toString().trim()
         val username = binding.usernameEditText.text.toString().trim()
         val password = binding.passwordEditText.text.toString().trim()
-        
-        Log.d("Test", "handleFinalRegistration: $name, $username, $password")
+        if (profileImageUri == null) {
+            Toast.makeText(requireContext(), "Please select a profile image", Toast.LENGTH_SHORT)
+                .show()
+            return
+        }
+        if (name.isNotEmpty() && username.isNotEmpty() && password.isNotEmpty()) {
+            viewModel.registerUser(name, username, password, profileImageUri!!)
+            animateViewsOut()
+        }
     }
     
     
     private fun showAvatarAndNameInput() {
-        // Animate the existing views out of the screen
         binding.usernameAndPasswordLinearLayout.animate()
             .translationX(-screenWidth)
             .setDuration(500)
             .withEndAction {
                 binding.usernameAndPasswordLinearLayout.isVisible = false
                 binding.enterYourEmailAndPasswordTextView.isVisible = false
-                
-                // Animate the new views into the screen
                 binding.profileImageFrameLayout.apply {
                     translationX = screenWidth
                     alpha = 0f
@@ -132,7 +140,6 @@ class RegisterFragment : Fragment() {
                         .alpha(1f)
                         .setDuration(500)
                         .withEndAction {
-                            // Re-enable the register button after animation
                             setRegisterButtonState(binding.nameEditText.text.isNotEmpty())
                         }
                         .start()
