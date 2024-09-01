@@ -20,4 +20,7 @@ interface UserDao {
     
     @Query("DELETE FROM user")
     suspend fun deleteAll()
+    
+    @Query("SELECT COUNT(*) > 0 FROM user WHERE username = :username")
+    fun getUserByUsername(username: String): Boolean
 }

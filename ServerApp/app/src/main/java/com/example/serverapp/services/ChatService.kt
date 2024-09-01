@@ -42,6 +42,10 @@ class ChatService : Service() {
         override fun addUser(user: User): Int {
             return runBlocking {
                 try {
+                    val usernameExists = serverRepository.getUserByUsername(user.username)
+                    if (usernameExists) {
+                        return@runBlocking 2
+                    }
                     serverRepository.addUser(user)
                     1
                 } catch (e: Exception) {

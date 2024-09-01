@@ -5,8 +5,10 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.net.Uri
 import android.os.IBinder
 import android.util.Log
+import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
 import com.example.serverapp.ChatServiceInterface
 import com.example.serverapp.models.User
@@ -42,9 +44,7 @@ class MainViewModel @Inject constructor(application: Application) : AndroidViewM
                 setClassName("com.example.serverapp", "com.example.serverapp.services.ChatService")
             }
             getApplication<Application>().bindService(
-                intent,
-                serviceConnection,
-                Context.BIND_AUTO_CREATE
+                intent, serviceConnection, Context.BIND_AUTO_CREATE
             )
         }
     }
@@ -67,5 +67,43 @@ class MainViewModel @Inject constructor(application: Application) : AndroidViewM
         } else {
             null
         }
+    }
+    
+    fun registerUser(name: String, username: String, password: String, profileImageUri: Uri) {
+        if (_isBound.value) {
+            try {
+                val user = User(0, name, username, password, profileImageUri)
+                val status = chatService?.addUser(user)
+                when (status) {
+                    1 -> {
+                        Log.d("ClientApp", "User added successfully")
+                        Toast.makeText(
+                            getApplication(),
+                            "User added successfully",
+                            Toast.LENGTH_SHORT
+                        )
+                            .show()
+                    }
+                    
+                    2 -> {
+                        Log.d("ClientApp", "Failed to add user")
+                        Toast.makeText(
+                            getApplication(),
+                            "Failed to add user because of duplicate username",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                    
+                    else -> {
+                        Log.d("ClientApp", "Failed to add user")
+                        Toast.makeText(getApplication(), "Failed to add user", Toast.LENGTH_SHORT)
+                            .show()
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+        
     }
 }
