@@ -19,9 +19,11 @@ import com.example.serverapp.IConversationCallback
 import com.example.serverapp.models.Conversation
 import com.example.serverapp.models.User
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -53,6 +55,7 @@ class MainViewModel @Inject constructor(application: Application) : AndroidViewM
         override fun onServiceDisconnected(name: ComponentName) {
             try {
                 chatService?.unregisterConversationCallback(conversationCallback)
+                Log.d("Test", "onServiceDisconnected: Oke")
             } catch (e: DeadObjectException) {
                 Log.w(
                     "ClientApp", "Service already disconnected. Unable to unregister callback.", e
@@ -115,39 +118,46 @@ class MainViewModel @Inject constructor(application: Application) : AndroidViewM
     
     fun registerUser(name: String, username: String, password: String, profileImageUri: Uri) {
         if (_isBound.value) {
-            try {
-                val imageString = ImageConverter().bitmapToString(
-                    Glide.with(getApplication<Application>().applicationContext).asBitmap()
-                        .load(profileImageUri).submit().get()
-                )
-                Log.d("test", "registerUser: $imageString")
-                val user = User(0, name = name, username, password, imageString)
-                val status = chatService?.addUser(user)
-                when (status) {
-                    1 -> {
-                        Log.d("ClientApp", "User added successfully")
-                        Toast.makeText(
-                            getApplication(), "User added successfully", Toast.LENGTH_SHORT
-                        ).show()
+            viewModelScope.launch {
+                try {
+                    val imageString = withContext(Dispatchers.IO) {
+                        val bitmap = Glide.with(getApplication<Application>().applicationContext)
+                            .asBitmap()
+                            .load(profileImageUri)
+                            .submit()
+                            .get()
+                        ImageConverter().bitmapToString(bitmap)
                     }
-                    
-                    2 -> {
-                        Log.d("ClientApp", "Failed to add user")
-                        Toast.makeText(
-                            getApplication(),
-                            "Failed to add user because of duplicate username",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                    Log.d("test", "registerUser: $imageString")
+                    val user = User(0, name = name, username, password, imageString)
+                    val status = chatService?.addUser(user)
+                    when (status) {
+                        1 -> {
+                            Log.d("ClientApp", "User added successfully")
+                            Toast.makeText(
+                                getApplication(), "User added successfully", Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                        
+                        2 -> {
+                            Log.d("ClientApp", "Failed to add user")
+                            Toast.makeText(
+                                getApplication(),
+                                "Failed to add user because of duplicate username",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                        
+                        else -> {
+                            Log.d("ClientApp", "Failed to add user")
+                            Toast.makeText(
+                                getApplication(), "Failed to add user", Toast.LENGTH_SHORT
+                            ).show()
+                        }
                     }
-                    
-                    else -> {
-                        Log.d("ClientApp", "Failed to add user")
-                        Toast.makeText(getApplication(), "Failed to add user", Toast.LENGTH_SHORT)
-                            .show()
-                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
                 }
-            } catch (e: Exception) {
-                e.printStackTrace()
             }
         }
         

@@ -8,6 +8,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
@@ -19,12 +20,12 @@ import com.example.clientapp.MainViewModel
 import com.example.clientapp.R
 import com.example.clientapp.databinding.FragmentRegisterBinding
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.runBlocking
 
 @AndroidEntryPoint
 class RegisterFragment : Fragment() {
     private val viewModel: MainViewModel by activityViewModels()
-    private var profileImageUri: Uri =
-        Uri.parse("android.resource://com.example.clientapp/drawable/default_vector_image")
+    private var profileImageUri: Uri? = null
     private var _binding: FragmentRegisterBinding? = null
     private val binding get() = _binding!!
     private val pickMedia =
@@ -78,10 +79,7 @@ class RegisterFragment : Fragment() {
     }
     
     private fun displaySelectedPhoto(uri: Uri) {
-        Glide.with(this)
-            .load(uri)
-            .circleCrop()
-            .into(binding.profileImageView)
+        Glide.with(this).load(uri).circleCrop().into(binding.profileImageView)
     }
     
     private fun setRegisterButtonState(isEnabled: Boolean) {
@@ -100,46 +98,39 @@ class RegisterFragment : Fragment() {
         val name = binding.nameEditText.text.toString().trim()
         val username = binding.usernameEditText.text.toString().trim()
         val password = binding.passwordEditText.text.toString().trim()
-        if (name.isNotEmpty() && username.isNotEmpty() && password.isNotEmpty()) {
-            viewModel.registerUser(name, username, password, profileImageUri)
+        if (profileImageUri == null) Toast.makeText(
+            requireContext(), "Failed to add user", Toast.LENGTH_SHORT
+        ).show()
+        if (name.isNotEmpty() && username.isNotEmpty() && password.isNotEmpty() && profileImageUri != null) {
+            runBlocking {
+                viewModel.registerUser(name, username, password, profileImageUri!!)
+            }
             animateViewsOut()
         }
     }
     
     
     private fun showAvatarAndNameInput() {
-        binding.usernameAndPasswordLinearLayout.animate()
-            .translationX(-screenWidth)
-            .setDuration(500)
-            .withEndAction {
+        binding.usernameAndPasswordLinearLayout.animate().translationX(-screenWidth)
+            .setDuration(500).withEndAction {
                 binding.usernameAndPasswordLinearLayout.isVisible = false
                 binding.enterYourEmailAndPasswordTextView.isVisible = false
                 binding.profileImageFrameLayout.apply {
                     translationX = screenWidth
                     alpha = 0f
                     isVisible = true
-                    animate()
-                        .translationX(0f)
-                        .alpha(1f)
-                        .setDuration(500)
-                        .start()
+                    animate().translationX(0f).alpha(1f).setDuration(500).start()
                 }
                 
                 binding.nameEditText.apply {
                     translationX = screenWidth
                     alpha = 0f
                     isVisible = true
-                    animate()
-                        .translationX(0f)
-                        .alpha(1f)
-                        .setDuration(500)
-                        .withEndAction {
-                            setRegisterButtonState(binding.nameEditText.text.isNotEmpty())
-                        }
-                        .start()
+                    animate().translationX(0f).alpha(1f).setDuration(500).withEndAction {
+                        setRegisterButtonState(binding.nameEditText.text.isNotEmpty())
+                    }.start()
                 }
-            }
-            .start()
+            }.start()
     }
     
     private fun setupTextWatchers() {
@@ -172,45 +163,28 @@ class RegisterFragment : Fragment() {
     private fun setInitialPositions() {
         binding.loginButton.translationX = -screenWidth
         binding.registerTextView.translationX = screenWidth
-        binding.enterYourEmailAndPasswordTextView.translationX =
-            screenWidth
+        binding.enterYourEmailAndPasswordTextView.translationX = screenWidth
     }
     
     private fun animateViewsIn() {
-        binding.loginButton.animate()
-            .translationX(0f)
-            .setDuration(500)
-            .start()
+        binding.loginButton.animate().translationX(0f).setDuration(500).start()
         
-        binding.registerTextView.animate()
-            .translationX(0f)
-            .setDuration(500)
+        binding.registerTextView.animate().translationX(0f).setDuration(500)
             .start()                // Navigate back to the login fragment
         
-        binding.enterYourEmailAndPasswordTextView.animate()
-            .translationX(0f)
-            .setDuration(500)
+        binding.enterYourEmailAndPasswordTextView.animate().translationX(0f).setDuration(500)
             .start()
     }
     
     private fun animateViewsOut() {
-        binding.enterYourEmailAndPasswordTextView.animate()
-            .translationX(screenWidth)
-            .setDuration(500)
-            .start()
+        binding.enterYourEmailAndPasswordTextView.animate().translationX(screenWidth)
+            .setDuration(500).start()
         
-        binding.registerTextView.animate()
-            .translationX(screenWidth)
-            .setDuration(500)
-            .start()
+        binding.registerTextView.animate().translationX(screenWidth).setDuration(500).start()
         
-        binding.loginButton.animate()
-            .translationX(-screenWidth)
-            .setDuration(500)
-            .withEndAction {
-                requireActivity().onBackPressed()
-            }
-            .start()
+        binding.loginButton.animate().translationX(-screenWidth).setDuration(500).withEndAction {
+            requireActivity().onBackPressed()
+        }.start()
     }
     
     override fun onDestroyView() {
