@@ -21,7 +21,6 @@ class ConversationAdapter(
             val userId1 = conversation.user1Id
             val userId2 = conversation.user2Id
             val user = viewModel.getUserById(userId1, userId2)
-            
             binding.name.text = user.name
             binding.messagePreview.text = conversation.lastMessageContent
             binding.timeDate.text = convertTimestampToDate(conversation.lastMessageTimestamp)

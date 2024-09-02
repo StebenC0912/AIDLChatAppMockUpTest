@@ -32,11 +32,14 @@ class MainViewModel @Inject constructor(application: Application) : AndroidViewM
     private val _isBound = MutableStateFlow(false)
     
     private var chatService: ChatServiceInterface? = null
-    private val _conversations = MutableStateFlow<List<Conversation>>(emptyList())
-    val conversations = _conversations.asStateFlow()
+    private val _conversationsFlow = MutableStateFlow<List<Conversation>>(emptyList())
+    val conversationsFlow = _conversationsFlow.asStateFlow()
     private val conversationCallback = object : IConversationCallback.Stub() {
         override fun onConversationsUpdated(conversations: List<Conversation>) {
-            _conversations.value = conversations
+            val userId = getUserIdFromSharedPreferences()
+            if (userId != -1) {
+                fetchAllConversations(userId)
+            }
         }
     }
     
@@ -74,7 +77,7 @@ class MainViewModel @Inject constructor(application: Application) : AndroidViewM
             if (_isBound.value) {
                 try {
                     val initialConversations = chatService?.getAllConversationsForUser(userId)
-                    _conversations.value = initialConversations ?: emptyList()
+                    _conversationsFlow.value = initialConversations ?: emptyList()
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
@@ -121,14 +124,11 @@ class MainViewModel @Inject constructor(application: Application) : AndroidViewM
             viewModelScope.launch {
                 try {
                     val imageString = withContext(Dispatchers.IO) {
-                        val bitmap = Glide.with(getApplication<Application>().applicationContext)
-                            .asBitmap()
-                            .load(profileImageUri)
-                            .submit()
-                            .get()
+                        val bitmap =
+                            Glide.with(getApplication<Application>().applicationContext).asBitmap()
+                                .load(profileImageUri).submit().get()
                         ImageConverter().bitmapToString(bitmap)
                     }
-                    Log.d("test", "registerUser: $imageString")
                     val user = User(0, name = name, username, password, imageString)
                     val status = chatService?.addUser(user)
                     when (status) {
@@ -182,6 +182,6 @@ class MainViewModel @Inject constructor(application: Application) : AndroidViewM
     }
     
     fun getAllConversation(): List<Conversation> {
-        return _conversations.value
+        return _conversationsFlow.value
     }
 }

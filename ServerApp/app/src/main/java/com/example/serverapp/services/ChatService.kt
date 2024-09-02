@@ -13,6 +13,7 @@ import com.example.serverapp.models.Conversation
 import com.example.serverapp.models.User
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -20,6 +21,8 @@ import kotlinx.coroutines.runBlocking
 class ChatService : Service() {
     private lateinit var serverRepository: ServerRepository
     private val callbacks = RemoteCallbackList<IConversationCallback>()
+    
+    private val conversationUpdatesFlow = MutableSharedFlow<List<Conversation>>(replay = 1)
     
     override fun onCreate() {
         super.onCreate()
@@ -32,30 +35,29 @@ class ChatService : Service() {
             val users = serverRepository.getAllUsers().first().toMutableList()
             Log.d("test", "onCreate: $users")
         }
-        observeConversationsForAllUsers()
+        observeConversationUpdates()
     }
     
-    private fun observeConversationsForAllUsers() {
+    private fun observeConversationUpdates() {
         CoroutineScope(Dispatchers.IO).launch {
-            val users = serverRepository.getAllUsers().first()
-            users.forEach { user ->
-                observeConversationsForUser(user.id)
-            }
-        }
-    }
-    
-    private fun observeConversationsForUser(userId: Int) {
-        CoroutineScope(Dispatchers.IO).launch {
-            serverRepository.getAllConversationsForUser(userId).collect { conversations ->
+            conversationUpdatesFlow.collect { conversations ->
                 notifyConversationUpdate(conversations)
             }
         }
     }
     
+    private fun emitConversationUpdate(conversations: List<Conversation>) {
+        CoroutineScope(Dispatchers.IO).launch {
+            conversationUpdatesFlow.emit(conversations)
+        }
+    }
+    
     private fun notifyConversationUpdate(conversations: List<Conversation>) {
         val count = callbacks.beginBroadcast()
+        Log.d("ChatService", "Notifying $count clients of new conversation updates.")
         for (i in 0 until count) {
             try {
+                Log.d("ChatService", "Sending conversation update to client $i: $conversations")
                 callbacks.getBroadcastItem(i).onConversationsUpdated(conversations)
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -84,6 +86,11 @@ class ChatService : Service() {
                     }
                     val newUserId = serverRepository.addUser(user)
                     serverRepository.createConversationsForNewUser(newUserId)
+                    
+                    val updatedConversations =
+                        serverRepository.getAllConversationsForUser(newUserId).first()
+                    emitConversationUpdate(updatedConversations)
+                    
                     1
                 } catch (e: Exception) {
                     e.printStackTrace()

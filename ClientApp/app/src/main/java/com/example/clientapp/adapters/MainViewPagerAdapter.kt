@@ -13,8 +13,8 @@ class MainViewPagerAdapter(fragment: Fragment) : FragmentStateAdapter(fragment) 
     override fun createFragment(position: Int): Fragment {
         return when (position) {
             0 -> ChatsFragment()
-            1 -> ProfileFragment() // Replace with your Profile fragment
-            else -> ChatsFragment() // Default to ChatsFragment
+            1 -> ProfileFragment()
+            else -> ChatsFragment()
         }
     }
 }

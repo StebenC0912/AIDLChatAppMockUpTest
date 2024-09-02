@@ -13,7 +13,6 @@ import com.example.clientapp.MainViewModel
 import com.example.clientapp.adapters.ConversationAdapter
 import com.example.clientapp.databinding.FragmentChatsBinding
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
@@ -21,6 +20,7 @@ class ChatsFragment : Fragment() {
     private val viewModel: MainViewModel by activityViewModels()
     private var _binding: FragmentChatsBinding? = null
     private val binding get() = _binding!!
+    
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?,
@@ -29,14 +29,19 @@ class ChatsFragment : Fragment() {
         val conversationAdapter = ConversationAdapter(viewModel)
         binding.conversations.adapter = conversationAdapter
         binding.conversations.layoutManager = LinearLayoutManager(requireContext())
+        
         lifecycleScope.launch {
-            viewModel.conversations.collect { conversationList ->
+            viewModel.conversationsFlow.collect { conversationList ->
                 conversationAdapter.submitList(conversationList)
+                Log.d("ChatsFragment", "Conversations updated: $conversationList")
             }
-            delay(5000)
-            Log.d("test", "onCreateView: Refreshing conversations")
         }
         
         return binding.root
+    }
+    
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }
