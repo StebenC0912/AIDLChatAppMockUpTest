@@ -7,6 +7,7 @@
     <color name="red_400">#F6695E</color>
 
     <color name="light_blue_50">#ECF9FF</color>
+    <color name="light_blue_500">#40C4FF</color>
     <color name="light_blue_600">#3AB2E8</color>
     <color name="blue_gradient_start">#40C4FF</color>
     <color name="blue_gradient_end">#03A9F4</color>
