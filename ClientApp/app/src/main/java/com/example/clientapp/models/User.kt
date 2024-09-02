@@ -1,6 +1,5 @@
 package com.example.serverapp.models
 
-import android.net.Uri
 import android.os.Parcel
 import android.os.Parcelable
 import androidx.room.ColumnInfo
@@ -13,7 +12,7 @@ data class User(
     @ColumnInfo(name = "name") val name: String,
     @ColumnInfo(name = "username") val username: String,
     @ColumnInfo(name = "password") val password: String,
-    @ColumnInfo(name = "image") val image: Uri,
+    @ColumnInfo(name = "image") val image: String,
 ) : Parcelable {
     
     constructor(parcel: Parcel) : this(
@@ -21,7 +20,7 @@ data class User(
         parcel.readString().toString(),
         parcel.readString().toString(),
         parcel.readString().toString(),
-        Uri.parse(parcel.readString())
+        parcel.readString().toString()
     )
     
     
@@ -34,7 +33,7 @@ data class User(
         p0.writeString(name)
         p0.writeString(username)
         p0.writeString(password)
-        p0.writeString(image.toString())
+        p0.writeString(image)
     }
     
     companion object CREATOR : Parcelable.Creator<User> {

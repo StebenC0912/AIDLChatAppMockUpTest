@@ -27,4 +27,12 @@
     <string name="name">Name</string>
     <string name="edit_icon">Edit Icon</string>
     <string name="avatar">Avatar</string>
+    <string name="chats">Chats</string>
+    <string name="profile">Profile</string>
+    <string name="search">Search</string>
+    <string name="logo">logo</string>
+    <string name="profile_image">profile image</string>
+    <string name="name_text_view">%s</string>
+    <string name="time">%s</string>
+    <string name="last_message">%s</string>
 </resources>

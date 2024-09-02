@@ -16,11 +16,14 @@ interface UserDao {
     fun login(username: String, password: String): User
     
     @Insert
-    fun addUser(user: User)
+    suspend fun addUser(user: User): Long
     
     @Query("DELETE FROM user")
     suspend fun deleteAll()
     
     @Query("SELECT COUNT(*) > 0 FROM user WHERE username = :username")
-    fun getUserByUsername(username: String): Boolean
+    suspend fun getUserByUsername(username: String): Boolean
+    
+    @Query("SELECT * FROM user WHERE id = :userId")
+    fun getUserById(userId: Int): User
 }

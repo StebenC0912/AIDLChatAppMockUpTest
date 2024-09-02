@@ -8,13 +8,12 @@ import com.example.clientapp.R
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 
 class EditProfileBottomSheetFragment : BottomSheetDialogFragment() {
-
+    
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View? {
-        // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_edit_profile_bottom_sheet, container, false)
     }
-
+    
 }

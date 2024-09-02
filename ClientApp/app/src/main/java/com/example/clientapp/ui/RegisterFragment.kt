@@ -8,7 +8,6 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
@@ -101,13 +100,8 @@ class RegisterFragment : Fragment() {
         val name = binding.nameEditText.text.toString().trim()
         val username = binding.usernameEditText.text.toString().trim()
         val password = binding.passwordEditText.text.toString().trim()
-        if (profileImageUri == null) {
-            Toast.makeText(requireContext(), "Please select a profile image", Toast.LENGTH_SHORT)
-                .show()
-            return
-        }
         if (name.isNotEmpty() && username.isNotEmpty() && password.isNotEmpty()) {
-            viewModel.registerUser(name, username, password, profileImageUri!!)
+            viewModel.registerUser(name, username, password, profileImageUri)
             animateViewsOut()
         }
     }
