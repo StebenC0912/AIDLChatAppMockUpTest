@@ -24,4 +24,6 @@
     <string name="profile_content_description_avatar_image">Avatar Image</string>
     <string name="profile_content_description_pen_icon">Pen Icon"</string>
 
+    <string name="chat_list_content_description_avatar_image">Avatar Image</string>
+
 </resources>

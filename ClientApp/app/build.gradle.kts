@@ -89,4 +89,7 @@ dependencies {
 
     // Material
     implementation("com.google.android.material:material:1.10.0")
+
+    // Recycler View
+    implementation("androidx.recyclerview:recyclerview:1.3.2")
 }
