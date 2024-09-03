@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Transaction
+import androidx.room.Update
 import com.example.serverapp.models.Conversation
 import kotlinx.coroutines.flow.Flow
 
@@ -21,4 +22,7 @@ interface ConversationDao {
     """
     )
     fun getAllConversationsForUser(userId: Int): Flow<List<Conversation>>
+    
+    @Update
+    fun updateConversation(conversation: Conversation)
 }

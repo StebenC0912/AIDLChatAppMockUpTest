@@ -2,22 +2,30 @@ package com.example.clientapp.adapters
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.navigation.NavController
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.clientapp.MainViewModel
+import com.example.clientapp.R
 import com.example.clientapp.databinding.ConversationItemBinding
+import com.example.clientapp.utils.DateUtils
 import com.example.clientapp.utils.ImageConverter
 import com.example.serverapp.models.Conversation
 
 class ConversationAdapter(
     private val viewModel: MainViewModel,
+    private val navController: NavController,
 ) : ListAdapter<Conversation, ConversationAdapter.ConversationViewHolder>(ConversationDiffCallback()) {
     class ConversationViewHolder(private val binding: ConversationItemBinding) :
         RecyclerView.ViewHolder(binding.root) {
         
-        fun bind(conversation: Conversation, viewModel: MainViewModel) {
+        fun bind(
+            conversation: Conversation,
+            viewModel: MainViewModel,
+            navController: NavController,
+        ) {
             val userId1 = conversation.user1Id
             val userId2 = conversation.user2Id
             val user = viewModel.getUserById(userId1, userId2)
@@ -29,6 +37,13 @@ class ConversationAdapter(
                     user.image
                 )
             ).into(binding.profileImage)
+            
+            binding.root.setOnClickListener {
+                viewModel.saveCurrentConversation(conversation)
+                navController.navigate(
+                    R.id.action_mainFragment_to_conversationFragment
+                )
+            }
         }
         
         
@@ -36,7 +51,7 @@ class ConversationAdapter(
             if (timestamp == null) {
                 return ""
             }
-            return timestamp.toString()
+            return DateUtils.formatTimestamp(timestamp)
         }
     }
     
@@ -58,6 +73,6 @@ class ConversationAdapter(
     
     override fun onBindViewHolder(holder: ConversationViewHolder, position: Int) {
         val conversation = getItem(position)
-        holder.bind(conversation, viewModel)
+        holder.bind(conversation, viewModel, navController)
     }
 }
