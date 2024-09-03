@@ -35,6 +35,11 @@
     <string name="name_text_view">%s</string>
     <string name="time">%s</string>
     <string name="last_message">%s</string>
+    <string name="back_button">Back Button</string>
+    <string name="name_title">%s</string>
+    <string name="delete_button">trash button</string>
+    <string name="send_button">send button</string>
+    <string name="type_a_message">Type a message...</string>
 
     <string name="chats_content_description_ic_close">Close Button</string>
     <string name="chats_content_description_ic_search">Search Button</string>

@@ -53,5 +53,13 @@ class ServerRepository(
     fun getUserById(userId: Int): User {
         return userDao.getUserById(userId)
     }
+    
+    fun addMessage(message: Message) {
+        messageDao.addNewMessage(message)
+    }
+    
+    fun updateConversation(conversation: Conversation) {
+        conversationDao.updateConversation(conversation)
+    }
 }
 

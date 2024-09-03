@@ -99,7 +99,7 @@ class RegisterFragment : Fragment() {
         val username = binding.usernameEditText.text.toString().trim()
         val password = binding.passwordEditText.text.toString().trim()
         if (profileImageUri == null) Toast.makeText(
-            requireContext(), "Failed to add user", Toast.LENGTH_SHORT
+            requireContext(), "Please choose a image", Toast.LENGTH_SHORT
         ).show()
         if (name.isNotEmpty() && username.isNotEmpty() && password.isNotEmpty() && profileImageUri != null) {
             runBlocking {

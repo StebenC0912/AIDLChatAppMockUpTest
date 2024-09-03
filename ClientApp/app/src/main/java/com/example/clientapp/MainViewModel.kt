@@ -16,7 +16,9 @@ import com.bumptech.glide.Glide
 import com.example.clientapp.utils.ImageConverter
 import com.example.serverapp.ChatServiceInterface
 import com.example.serverapp.IConversationCallback
+import com.example.serverapp.IMessageCallback
 import com.example.serverapp.models.Conversation
+import com.example.serverapp.models.Message
 import com.example.serverapp.models.User
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -30,8 +32,8 @@ import javax.inject.Inject
 class MainViewModel @Inject constructor(application: Application) : AndroidViewModel(application) {
     
     private val _isBound = MutableStateFlow(false)
-    
     private var chatService: ChatServiceInterface? = null
+    
     private val _conversationsFlow = MutableStateFlow<List<Conversation>>(emptyList())
     val conversationsFlow = _conversationsFlow.asStateFlow()
     private val conversationCallback = object : IConversationCallback.Stub() {
@@ -43,12 +45,29 @@ class MainViewModel @Inject constructor(application: Application) : AndroidViewM
         }
     }
     
+    private val _messagesFlow = MutableStateFlow<List<Message>>(emptyList())
+    val messagesFlow = _messagesFlow.asStateFlow()
+    
+    private val messageCallback = object : IMessageCallback.Stub() {
+        override fun onMessageReceived(message: Message) {
+            viewModelScope.launch {
+                val currentConversationId = getCurrentConversationIdFromPreferences()
+                if (message.chatId == currentConversationId) {
+                    val updatedMessages = _messagesFlow.value.toMutableList()
+                    updatedMessages.add(message)
+                    _messagesFlow.value = updatedMessages
+                }
+            }
+        }
+    }
+    
     private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName, service: IBinder) {
             Log.d("ClientApp", "Service Connected")
             chatService = ChatServiceInterface.Stub.asInterface(service)
             _isBound.value = true
             chatService?.registerConversationCallback(conversationCallback)
+            chatService?.registerMessageCallback(messageCallback)
             val userId = getUserIdFromSharedPreferences()
             if (userId != -1) {
                 fetchAllConversations(userId)
@@ -58,6 +77,7 @@ class MainViewModel @Inject constructor(application: Application) : AndroidViewM
         override fun onServiceDisconnected(name: ComponentName) {
             try {
                 chatService?.unregisterConversationCallback(conversationCallback)
+                chatService?.unregisterMessageCallback(messageCallback)
                 Log.d("Test", "onServiceDisconnected: Oke")
             } catch (e: DeadObjectException) {
                 Log.w(
@@ -175,13 +195,89 @@ class MainViewModel @Inject constructor(application: Application) : AndroidViewM
         sharedPreferences.edit().putInt("User Id", userId).apply()
     }
     
-    private fun getUserIdFromSharedPreferences(): Int {
+    fun getUserIdFromSharedPreferences(): Int {
         val sharedPreferences =
             getApplication<Application>().getSharedPreferences("login_prefs", Context.MODE_PRIVATE)
         return sharedPreferences.getInt("User Id", -1)
     }
     
-    fun getAllConversation(): List<Conversation> {
-        return _conversationsFlow.value
+    private fun fetchMessagesForConversation(conversationId: Int) {
+        viewModelScope.launch {
+            if (_isBound.value) {
+                try {
+                    val messages = chatService?.getMessagesForConversation(conversationId)
+                    _messagesFlow.value = messages ?: emptyList()
+                    saveCurrentConversationIdToPreferences(conversationId)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+        }
+    }
+    
+    fun sendMessage(content: String) {
+        val chatId = getCurrentConversationIdFromPreferences()
+        val senderId = getUserIdFromSharedPreferences()
+        val receiverId = getReceiverId()
+        viewModelScope.launch {
+            if (_isBound.value) {
+                try {
+                    val message = Message(
+                        messageId = 0,
+                        chatId = chatId,
+                        senderId = senderId,
+                        receiverId = receiverId,
+                        content = content,
+                        timestamp = System.currentTimeMillis()
+                    )
+                    chatService?.sendMessage(message)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+        }
+    }
+    
+    private fun saveCurrentConversationIdToPreferences(conversationId: Int) {
+        val sharedPreferences =
+            getApplication<Application>().getSharedPreferences("login_prefs", Context.MODE_PRIVATE)
+        sharedPreferences.edit().putInt("Conversation Id", conversationId).apply()
+    }
+    
+    private fun getCurrentConversationIdFromPreferences(): Int {
+        val sharedPreferences =
+            getApplication<Application>().getSharedPreferences("login_prefs", Context.MODE_PRIVATE)
+        return sharedPreferences.getInt("Conversation Id", -1)
+    }
+    
+    fun saveCurrentConversation(conversation: Conversation) {
+        val conversationId = conversation.conversationId
+        fetchMessagesForConversation(conversationId)
+        val receiver = getUserById(conversation.user1Id, conversation.user2Id)
+        val receiverName = receiver.name
+        val receiverImage = receiver.image
+        val sharedPreferences =
+            getApplication<Application>().getSharedPreferences("login_prefs", Context.MODE_PRIVATE)
+        sharedPreferences.edit().putInt("receiverId", receiver.id).apply()
+        sharedPreferences.edit().putString("Receiver Name", receiverName).apply()
+        sharedPreferences.edit().putString("Receiver Image", receiverImage).apply()
+    }
+    
+    fun getReceiverId(): Int {
+        val sharedPreferences =
+            getApplication<Application>().getSharedPreferences("login_prefs", Context.MODE_PRIVATE)
+        return sharedPreferences.getInt("receiverId", -1)
+    }
+    
+    fun getReceiverName(): String {
+        val sharedPreferences =
+            getApplication<Application>().getSharedPreferences("login_prefs", Context.MODE_PRIVATE)
+        return sharedPreferences.getString("Receiver Name", "") ?: ""
+    }
+    
+    fun getReceiverImage(): String {
+        val sharedPreferences =
+            getApplication<Application>().getSharedPreferences("login_prefs", Context.MODE_PRIVATE)
+        return sharedPreferences.getString("Receiver Image", "") ?: ""
     }
 }

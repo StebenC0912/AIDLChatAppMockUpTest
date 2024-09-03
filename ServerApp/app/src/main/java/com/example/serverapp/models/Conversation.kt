@@ -24,8 +24,8 @@ data class Conversation(
     @PrimaryKey(autoGenerate = true) val conversationId: Int = 0,
     val user1Id: Int,
     val user2Id: Int,
-    val lastMessageContent: String? = null,
-    val lastMessageTimestamp: Long? = null,
+    var lastMessageContent: String? = null,
+    var lastMessageTimestamp: Long? = null,
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
         parcel.readInt(),
