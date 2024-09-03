@@ -2,6 +2,8 @@ package com.example.clientapp.adapters
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.navigation.NavController
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
@@ -43,6 +45,26 @@ class ConversationAdapter(
                 navController.navigate(
                     R.id.action_mainFragment_to_conversationFragment
                 )
+            }
+            
+            binding.root.setOnLongClickListener {
+                AlertDialog.Builder(binding.root.context)
+                    .setTitle("Delete conversation")
+                    .setMessage("Are you sure you want to delete this conversation?")
+                    .setPositiveButton("Yes") { _, _ ->
+                        viewModel.deleteConversation(conversation)
+                        Toast.makeText(
+                            binding.root.context,
+                            "Conversation deleted",
+                            Toast.LENGTH_SHORT
+                        )
+                            .show()
+                    }
+                    .setNegativeButton("No") { dialog, _ ->
+                        dialog.dismiss()
+                    }
+                    .show()
+                true
             }
         }
         

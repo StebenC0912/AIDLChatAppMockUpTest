@@ -192,6 +192,28 @@ class ChatService : Service() {
                 serverRepository.getMessagesForConversation(conversationId).first().toMutableList()
             }
         }
+        
+        override fun deleteConversation(conversationId: Int, userId: Int) {
+            runBlocking {
+                val messages = serverRepository.getMessagesForConversation(conversationId).first()
+                    .toMutableList()
+                
+                messages.forEach { message ->
+                    val updatedMessage = if (message.senderId == userId) {
+                        message.copy(isDeletedBySender = true)
+                    } else {
+                        message.copy(isDeletedByReceiver = true)
+                    }
+                    Log.d("Test", "deleteConversation: Test")
+                    serverRepository.updateMessage(updatedMessage)
+                    
+                    if (updatedMessage.isDeletedBySender && updatedMessage.isDeletedByReceiver) {
+                        serverRepository.deleteMessage(updatedMessage.messageId)
+                    }
+                }
+            }
+        }
+        
     }
     
 }

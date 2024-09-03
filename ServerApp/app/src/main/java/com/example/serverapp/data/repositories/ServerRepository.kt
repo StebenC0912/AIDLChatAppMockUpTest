@@ -61,5 +61,13 @@ class ServerRepository(
     fun updateConversation(conversation: Conversation) {
         conversationDao.updateConversation(conversation)
     }
+    
+    fun updateMessage(copy: Message) {
+        messageDao.updateMessage(copy)
+    }
+    
+    fun deleteMessage(messageId: Int) {
+        messageDao.deleteMessage(messageId)
+    }
 }
 

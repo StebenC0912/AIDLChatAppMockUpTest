@@ -15,14 +15,17 @@ class MessageAdapter(
     private val currentUserId: Int,
 ) : ListAdapter<Message, RecyclerView.ViewHolder>(MessageDiffCallback()) {
     
-    companion object {
-        private const val VIEW_TYPE_SENT = 1
-        private const val VIEW_TYPE_RECEIVED = 2
-    }
-    
     override fun getItemViewType(position: Int): Int {
         val message = getItem(position)
-        return if (message.senderId == currentUserId) VIEW_TYPE_SENT else VIEW_TYPE_RECEIVED
+        return if ((message.isDeletedBySender && message.senderId == currentUserId) ||
+            (message.isDeletedByReceiver && message.receiverId == currentUserId)
+        ) {
+            VIEW_TYPE_HIDDEN // New view type for hidden messages
+        } else if (message.senderId == currentUserId) {
+            VIEW_TYPE_SENT
+        } else {
+            VIEW_TYPE_RECEIVED
+        }
     }
     
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
@@ -30,10 +33,14 @@ class MessageAdapter(
             val view = LayoutInflater.from(parent.context)
                 .inflate(R.layout.item_message_sent, parent, false)
             SentMessageViewHolder(view)
-        } else {
+        } else if (viewType == VIEW_TYPE_RECEIVED) {
             val view = LayoutInflater.from(parent.context)
                 .inflate(R.layout.item_message_received, parent, false)
             ReceivedMessageViewHolder(view)
+        } else {
+            val view = LayoutInflater.from(parent.context)
+                .inflate(R.layout.item_message_hidden, parent, false)
+            HiddenMessageViewHolder(view)
         }
     }
     
@@ -41,8 +48,10 @@ class MessageAdapter(
         val message = getItem(position)
         if (getItemViewType(position) == VIEW_TYPE_SENT) {
             (holder as SentMessageViewHolder).bind(message)
-        } else {
+        } else if (getItemViewType(position) == VIEW_TYPE_RECEIVED) {
             (holder as ReceivedMessageViewHolder).bind(message)
+        } else {
+            // Do nothing
         }
     }
     
@@ -73,6 +82,15 @@ class MessageAdapter(
             return DateUtils.formatTimestamp(timestamp)
         }
     }
+    
+    class HiddenMessageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
+    
+    companion object {
+        private const val VIEW_TYPE_SENT = 1
+        private const val VIEW_TYPE_RECEIVED = 2
+        private const val VIEW_TYPE_HIDDEN = 3
+    }
+    
 }
 
 class MessageDiffCallback : DiffUtil.ItemCallback<Message>() {

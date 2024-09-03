@@ -27,11 +27,11 @@
             android:src="@drawable/baseline_arrow_back" />
 
         <com.google.android.material.imageview.ShapeableImageView
+            android:scaleType="centerCrop"
             android:id="@+id/profileImageView"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:layout_marginEnd="@dimen/normal_layout"
-            android:padding="5dp"
             app:shapeAppearanceOverlay="@style/circleImageView"
             app:strokeColor="@color/white"
             app:strokeWidth="5dp" />
@@ -88,6 +88,7 @@
             android:background="@drawable/bg_message_input"
             android:hint="@string/type_a_message"
             android:inputType="textMultiLine"
+            android:minHeight="48dp"
             android:padding="10dp"
             android:textColor="@android:color/black"
             android:textSize="16sp" />
