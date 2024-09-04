@@ -74,5 +74,9 @@ class ServerRepository(
         return messageDao.getLatestMessagesForConversation(conversationId)
     }
     
+    fun getMessageById(messageId: Int): Message {
+        return messageDao.getMessageById(messageId)
+    }
+    
 }
 

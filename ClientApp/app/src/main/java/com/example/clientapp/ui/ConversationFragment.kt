@@ -47,11 +47,31 @@ class ConversationFragment : Fragment() {
         binding.backButton.setOnClickListener {
             findNavController().popBackStack()
         }
+        binding.deleteMenu.setOnClickListener {
+            viewModel.toggleDeleteMode()
+            updateUIForDeleteMode(viewModel.deleteMode)
+        }
+        binding.cancelButton.setOnClickListener {
+            viewModel.clearSelectedMessages()
+            viewModel.toggleDeleteMode()
+            updateUIForDeleteMode(viewModel.deleteMode)
+        }
+        binding.deleteButton.setOnClickListener {
+            viewModel.deleteSelectedMessages()
+            viewModel.toggleDeleteMode()
+            updateUIForDeleteMode(viewModel.deleteMode)
+        }
     }
     
     override fun onResume() {
         super.onResume()
         scrollToBottom()
+    }
+    
+    private fun updateUIForDeleteMode(isDeleteMode: Boolean) {
+        val adapter = binding.recyclerView.adapter as MessageAdapter
+        adapter.setDeleteMode(isDeleteMode)
+        binding.hiddenMenu.visibility = if (isDeleteMode) View.VISIBLE else View.GONE
     }
     
     private fun setupUI() {
@@ -80,7 +100,7 @@ class ConversationFragment : Fragment() {
     }
     
     private fun setupRecyclerView() {
-        val conversationAdapter = MessageAdapter(viewModel.getUserId())
+        val conversationAdapter = MessageAdapter(viewModel.getUserId(), viewModel)
         binding.recyclerView.apply {
             adapter = conversationAdapter
             layoutManager = LinearLayoutManager(requireContext())

@@ -6,15 +6,28 @@
     android:orientation="vertical"
     android:padding="8dp">
 
-    <TextView
-        android:id="@+id/message_text"
+    <LinearLayout
+        android:gravity="center"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="@drawable/bg_message_received"
-        android:maxWidth="340dp"
-        android:padding="10dp"
-        android:textColor="@android:color/black"
-        android:textSize="16sp" />
+        android:layout_height="wrap_content">
+
+        <CheckBox
+            android:id="@+id/message_checkbox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/message_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_message_received"
+            android:maxWidth="340dp"
+            android:padding="10dp"
+            android:textColor="@android:color/black"
+            android:textSize="16sp" />
+
+    </LinearLayout>
 
     <TextView
         android:id="@+id/message_time"

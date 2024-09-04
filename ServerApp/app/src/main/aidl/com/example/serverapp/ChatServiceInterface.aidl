@@ -23,4 +23,7 @@ interface ChatServiceInterface {
 
     void deleteConversation(int conversationId, int userId);
     Message getMessageById(int conversationId, int userId);
+
+    void deleteMessages(in int[] messageIds, int userId);
+
 }

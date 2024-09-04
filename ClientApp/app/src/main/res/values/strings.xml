@@ -43,5 +43,8 @@
 
     <string name="chats_content_description_ic_close">Close Button</string>
     <string name="chats_content_description_ic_search">Search Button</string>
+    <string name="cancel_button">Cacel button</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete">Delete</string>
 
 </resources>

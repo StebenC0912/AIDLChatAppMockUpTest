@@ -44,4 +44,7 @@ interface MessageDao {
     )
     fun getLatestMessagesForConversation(conversationId: Int): Flow<List<Message>>
     
+    @Query("SELECT * FROM Message WHERE messageId = :messageId")
+    fun getMessageById(messageId: Int): Message
+    
 }

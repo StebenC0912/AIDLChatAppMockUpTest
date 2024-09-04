@@ -134,7 +134,6 @@ class ChatService : Service() {
         override fun sendMessage(message: Message?) {
             runBlocking {
                 if (message != null) {
-                    // Add the new message to the database
                     serverRepository.addMessage(message)
                     
                     // Notify all registered callbacks that a new message was received
@@ -204,7 +203,6 @@ class ChatService : Service() {
                     } else {
                         message.copy(isDeletedByReceiver = true)
                     }
-                    Log.d("Test", "deleteConversation: Test")
                     serverRepository.updateMessage(updatedMessage)
                     
                     if (updatedMessage.isDeletedBySender && updatedMessage.isDeletedByReceiver) {
@@ -233,6 +231,34 @@ class ChatService : Service() {
             }
         }
         
+        override fun deleteMessages(messageIds: IntArray?, userId: Int) {
+            runBlocking {
+                messageIds?.forEach { messageId ->
+                    val message = serverRepository.getMessageById(messageId)
+                    val updatedMessage = if (message.senderId == userId) {
+                        message.copy(isDeletedBySender = true)
+                    } else {
+                        message.copy(isDeletedByReceiver = true)
+                    }
+                    serverRepository.updateMessage(updatedMessage)
+                    
+                    if (updatedMessage.isDeletedBySender && updatedMessage.isDeletedByReceiver) {
+                        serverRepository.deleteMessage(updatedMessage.messageId)
+                    }
+                    
+                    // Notify all clients that the message was deleted
+                    val count = messageCallbacks.beginBroadcast()
+                    for (i in 0 until count) {
+                        try {
+                            messageCallbacks.getBroadcastItem(i).onMessageDeleted(messageId)
+                        } catch (e: Exception) {
+                            Log.e("ChatService", "Error notifying client about message deletion", e)
+                        }
+                    }
+                    messageCallbacks.finishBroadcast()
+                }
+            }
+        }
     }
     
 }

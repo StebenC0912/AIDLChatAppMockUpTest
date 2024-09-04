@@ -40,6 +40,12 @@ class MainViewModel @Inject constructor(application: Application) : AndroidViewM
     private val _messagesFlow = MutableStateFlow<List<Message>>(emptyList())
     val messagesFlow = _messagesFlow.asStateFlow()
     
+    private var _deleteMode = false
+    val deleteMode: Boolean get() = _deleteMode
+    
+    private val _selectedMessages = mutableListOf<Message>()
+    val selectedMessages: List<Message> get() = _selectedMessages
+    
     private val conversationCallback = object : IConversationCallback.Stub() {
         override fun onConversationsUpdated(conversations: List<Conversation>) {
             fetchAllConversations()
@@ -50,8 +56,15 @@ class MainViewModel @Inject constructor(application: Application) : AndroidViewM
         override fun onMessageReceived(message: Message) {
             viewModelScope.launch {
                 if (message.chatId == getCurrentConversationId()) {
-                    _messagesFlow.value = _messagesFlow.value + message
+                    _messagesFlow.value += message
                 }
+            }
+        }
+        
+        override fun onMessageDeleted(messageId: Int) {
+            viewModelScope.launch {
+                _messagesFlow.value = _messagesFlow.value.filter { it.messageId != messageId }
+                Log.d("ClientApp", "Message with ID $messageId has been deleted.")
             }
         }
     }
@@ -72,9 +85,7 @@ class MainViewModel @Inject constructor(application: Application) : AndroidViewM
                 chatService?.unregisterMessageCallback(messageCallback)
             } catch (e: DeadObjectException) {
                 Log.w(
-                    "ClientApp",
-                    "Service already disconnected. Unable to unregister callback.",
-                    e
+                    "ClientApp", "Service already disconnected. Unable to unregister callback.", e
                 )
             } catch (e: Exception) {
                 Log.e("ClientApp", "Error while unregistering callback", e)
@@ -277,8 +288,7 @@ class MainViewModel @Inject constructor(application: Application) : AndroidViewM
                 val userId = getUserId()
                 val message = chatService?.getMessageById(conversation.conversationId, userId)
                 Log.d(
-                    "last message",
-                    "getVisibleLastMessage: ${message} , current user id: $userId"
+                    "last message", "getVisibleLastMessage: ${message} , current user id: $userId"
                 )
                 return message ?: Message(0, 0, 0, 0, "", 0)
             } catch (e: Exception) {
@@ -286,6 +296,40 @@ class MainViewModel @Inject constructor(application: Application) : AndroidViewM
             }
         }
         return Message(0, 0, 0, 0, "", 0)
+    }
+    
+    fun toggleDeleteMode() {
+        _deleteMode = !_deleteMode
+    }
+    
+    fun disableDeleteMode() {
+        _deleteMode = false
+    }
+    
+    fun addMessageToSelection(message: Message) {
+        _selectedMessages.add(message)
+    }
+    
+    fun removeMessageFromSelection(message: Message) {
+        _selectedMessages.remove(message)
+    }
+    
+    fun clearSelectedMessages() {
+        _selectedMessages.clear()
+    }
+    
+    fun deleteSelectedMessages() {
+        viewModelScope.launch {
+            if (_isBound.value) {
+                try {
+                    val selectId = _selectedMessages.map { it.messageId }.toIntArray()
+                    chatService?.deleteMessages(selectId, getUserId())
+                    _selectedMessages.clear()
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+        }
     }
 }
 
