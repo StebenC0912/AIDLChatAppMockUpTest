@@ -31,15 +31,15 @@ class ConversationAdapter(
             val userId1 = conversation.user1Id
             val userId2 = conversation.user2Id
             val user = viewModel.getUserById(userId1, userId2)
+            val lastMessage = viewModel.getVisibleLastMessage(conversation)
             binding.name.text = user.name
-            binding.messagePreview.text = conversation.lastMessageContent
-            binding.timeDate.text = convertTimestampToDate(conversation.lastMessageTimestamp)
+            binding.messagePreview.text = lastMessage.content
+            binding.timeDate.text = convertTimestampToDate(lastMessage.timestamp)
             Glide.with(binding.root).load(
                 ImageConverter().stringToBitmap(
                     user.image
                 )
             ).into(binding.profileImage)
-            
             binding.root.setOnClickListener {
                 viewModel.saveCurrentConversation(conversation)
                 navController.navigate(
@@ -70,7 +70,7 @@ class ConversationAdapter(
         
         
         private fun convertTimestampToDate(timestamp: Long?): String {
-            if (timestamp == null) {
+            if (timestamp == null || timestamp == 0L) {
                 return ""
             }
             return DateUtils.formatTimestamp(timestamp)

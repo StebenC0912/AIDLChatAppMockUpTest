@@ -211,6 +211,25 @@ class ChatService : Service() {
                         serverRepository.deleteMessage(updatedMessage.messageId)
                     }
                 }
+                val updatedConversation =
+                    serverRepository.getAllConversationsForUser(userId).first().firstOrNull {
+                        it.conversationId == conversationId
+                    }?.copy(lastMessageContent = "", lastMessageTimestamp = 0)
+                if (updatedConversation != null) {
+                    serverRepository.updateConversation(updatedConversation)
+                    val updatedConversations =
+                        serverRepository.getAllConversationsForUser(userId).first()
+                    emitConversationUpdate(updatedConversations)
+                }
+            }
+        }
+        
+        override fun getMessageById(conversationId: Int, userId: Int): Message {
+            return runBlocking {
+                serverRepository.getLatestVisibleMessage(conversationId).first().firstOrNull {
+                    (it.senderId == userId && !it.isDeletedBySender) || (it.receiverId == userId && !it.isDeletedByReceiver)
+                }
+                    ?: Message(0, 0, 0, 0, "", 0)
             }
         }
         

@@ -69,5 +69,10 @@ class ServerRepository(
     fun deleteMessage(messageId: Int) {
         messageDao.deleteMessage(messageId)
     }
+    
+    fun getLatestVisibleMessage(conversationId: Int): Flow<List<Message>> {
+        return messageDao.getLatestMessagesForConversation(conversationId)
+    }
+    
 }
 

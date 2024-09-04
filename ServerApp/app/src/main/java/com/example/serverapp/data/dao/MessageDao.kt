@@ -34,4 +34,14 @@ interface MessageDao {
     """
     )
     fun deleteMessage(messageId: Int)
+    
+    @Query(
+        """
+    SELECT * FROM Message
+    WHERE chatId = :conversationId
+    ORDER BY timestamp DESC
+    """
+    )
+    fun getLatestMessagesForConversation(conversationId: Int): Flow<List<Message>>
+    
 }

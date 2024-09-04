@@ -270,5 +270,22 @@ class MainViewModel @Inject constructor(application: Application) : AndroidViewM
             }
         }
     }
+    
+    fun getVisibleLastMessage(conversation: Conversation): Message {
+        if (_isBound.value) {
+            try {
+                val userId = getUserId()
+                val message = chatService?.getMessageById(conversation.conversationId, userId)
+                Log.d(
+                    "last message",
+                    "getVisibleLastMessage: ${message} , current user id: $userId"
+                )
+                return message ?: Message(0, 0, 0, 0, "", 0)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+        return Message(0, 0, 0, 0, "", 0)
+    }
 }
 
