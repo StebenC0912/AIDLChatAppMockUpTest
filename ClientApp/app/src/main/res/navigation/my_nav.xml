@@ -34,6 +34,9 @@
         <action
             android:id="@+id/action_mainFragment_to_conversationFragment"
             app:destination="@id/conversationFragment" />
+        <action
+            android:id="@+id/action_mainFragment_to_loginFragment"
+            app:destination="@id/loginFragment" />
     </fragment>
     <fragment
         android:id="@+id/conversationFragment"

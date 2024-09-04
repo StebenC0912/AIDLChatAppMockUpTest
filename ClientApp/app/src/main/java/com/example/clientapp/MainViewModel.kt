@@ -146,6 +146,7 @@ class MainViewModel @Inject constructor(application: Application) : AndroidViewM
             try {
                 chatService?.login(username, password)?.also { user ->
                     saveUserId(user.id)
+                    saveCurrentUserInformation(user)
                     fetchAllConversations()
                 }
             } catch (e: Exception) {
@@ -155,6 +156,23 @@ class MainViewModel @Inject constructor(application: Application) : AndroidViewM
         } else {
             null
         }
+    }
+    
+    private fun saveCurrentUserInformation(user: User) {
+        val sharedPreferences = getSharedPreferences()
+        sharedPreferences.edit().apply {
+            putString("User Name", user.name)
+            putString("User Image", user.image)
+            putString("User Username", user.username)
+        }.apply()
+    }
+    
+    fun getCurrentUser(): User {
+        val sharedPreferences = getSharedPreferences()
+        val name = sharedPreferences.getString("User Name", "") ?: ""
+        val image = sharedPreferences.getString("User Image", "") ?: ""
+        val username = sharedPreferences.getString("User Username", "") ?: ""
+        return User(0, name, username, "", image)
     }
     
     fun registerUser(name: String, username: String, password: String, profileImageUri: Uri) {
@@ -330,6 +348,10 @@ class MainViewModel @Inject constructor(application: Application) : AndroidViewM
                 }
             }
         }
+    }
+    
+    fun logout() {
+        getSharedPreferences().edit().clear().apply()
     }
 }
 
