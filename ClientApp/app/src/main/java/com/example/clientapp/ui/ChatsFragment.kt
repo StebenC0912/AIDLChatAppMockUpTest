@@ -34,30 +34,19 @@ class ChatsFragment : Fragment() {
         lifecycleScope.launch {
             viewModel.conversationsFlow.collect { conversationList ->
                 conversationAdapter.submitList(conversationList)
-                Log.d("ChatsFragment", "Conversations updated: $conversationList")
+                Log.d(TAG, "Conversations updated: $conversationList")
             }
         }
         
         return binding.root
     }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        binding.ivSearch.setOnClickListener {
-            binding.searchContainer.visibility = View.VISIBLE
-            binding.ivSearch.visibility = View.GONE
-        }
-
-        binding.ivClose.setOnClickListener {
-            binding.searchContainer.visibility = View.GONE
-            binding.ivSearch.visibility = View.VISIBLE
-        }
-
-    }
     
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+    
+    companion object {
+        private const val TAG = "ChatsFragment"
     }
 }

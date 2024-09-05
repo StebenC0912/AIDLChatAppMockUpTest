@@ -49,18 +49,17 @@ class ConversationAdapter(
             
             binding.root.setOnLongClickListener {
                 AlertDialog.Builder(binding.root.context)
-                    .setTitle("Delete conversation")
-                    .setMessage("Are you sure you want to delete this conversation?")
-                    .setPositiveButton("Yes") { _, _ ->
+                    .setTitle(binding.root.context.getString(R.string.delete_conversation_title))
+                    .setMessage(binding.root.context.getString(R.string.delete_conversation_message))
+                    .setPositiveButton(binding.root.context.getString(R.string.yes)) { _, _ ->
                         viewModel.deleteConversation(conversation)
                         Toast.makeText(
                             binding.root.context,
-                            "Conversation deleted",
+                            binding.root.context.getString(R.string.conversation_deleted),
                             Toast.LENGTH_SHORT
-                        )
-                            .show()
+                        ).show()
                     }
-                    .setNegativeButton("No") { dialog, _ ->
+                    .setNegativeButton(binding.root.context.getString(R.string.no)) { dialog, _ ->
                         dialog.dismiss()
                     }
                     .show()

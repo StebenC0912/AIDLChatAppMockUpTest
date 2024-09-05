@@ -320,10 +320,6 @@ class MainViewModel @Inject constructor(application: Application) : AndroidViewM
         _deleteMode = !_deleteMode
     }
     
-    fun disableDeleteMode() {
-        _deleteMode = false
-    }
-    
     fun addMessageToSelection(message: Message) {
         _selectedMessages.add(message)
     }

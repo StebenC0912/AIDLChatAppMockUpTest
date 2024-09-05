@@ -107,7 +107,7 @@ class MessageAdapter(
         }
         
         private fun formatTimestamp(timestamp: Long): String {
-            return DateUtils.formatTimestamp(timestamp)
+            return itemView.context.getString(R.string.time, DateUtils.formatTimestamp(timestamp))
         }
     }
     
