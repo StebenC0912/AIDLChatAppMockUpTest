@@ -24,6 +24,34 @@
     <string name="profile_content_description_avatar_image">Avatar Image</string>
     <string name="profile_content_description_pen_icon">Pen Icon"</string>
 
-    <string name="chat_list_content_description_avatar_image">Avatar Image</string>
+    <string name="name">Name</string>
+    <string name="edit_icon">Edit Icon</string>
+    <string name="avatar">Avatar</string>
+    <string name="chats">Chats</string>
+    <string name="profile">Profile</string>
+    <string name="search">Search</string>
+    <string name="logo">logo</string>
+    <string name="profile_image">profile image</string>
+    <string name="name_text_view">%s</string>
+    <string name="time">%s</string>
+    <string name="last_message">%s</string>
+    <string name="back_button">Back Button</string>
+    <string name="name_title">%s</string>
+    <string name="delete_button">trash button</string>
+    <string name="send_button">send button</string>
+    <string name="type_a_message">Type a message...</string>
+
+    <string name="chats_content_description_ic_close">Close Button</string>
+    <string name="chats_content_description_ic_search">Search Button</string>
+    <string name="cancel_button">Cacel button</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete">Delete</string>
+
+    <string name="delete_conversation_title">Delete conversation</string>
+    <string name="delete_conversation_message">Are you sure you want to delete this conversation?</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="conversation_deleted">Conversation deleted</string>
+    <string name="chat_list_content_description_avatar_image">chat_list_content_description_avatar_image</string>
 
 </resources>
