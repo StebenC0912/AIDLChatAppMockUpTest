@@ -241,7 +241,7 @@ class ChatService : Service() {
                         message.copy(isDeletedByReceiver = true)
                     }
                     serverRepository.updateMessage(updatedMessage)
-                    
+                    Log.d("Test", "deleteMessages: $updatedMessage ")
                     if (updatedMessage.isDeletedBySender && updatedMessage.isDeletedByReceiver) {
                         serverRepository.deleteMessage(updatedMessage.messageId)
                     }
