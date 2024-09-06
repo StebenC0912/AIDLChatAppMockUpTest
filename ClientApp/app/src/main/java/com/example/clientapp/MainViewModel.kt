@@ -31,8 +31,8 @@ import javax.inject.Inject
 @HiltViewModel
 class MainViewModel @Inject constructor(application: Application) : AndroidViewModel(application) {
     
-    private val _isBound = MutableStateFlow(false)
-    private var chatService: ChatServiceInterface? = null
+    val _isBound = MutableStateFlow(false)
+    var chatService: ChatServiceInterface? = null
     
     private val _conversationsFlow = MutableStateFlow<List<Conversation>>(emptyList())
     val conversationsFlow = _conversationsFlow.asStateFlow()
@@ -96,7 +96,7 @@ class MainViewModel @Inject constructor(application: Application) : AndroidViewM
         }
     }
     
-    private fun fetchAllConversations() {
+    fun fetchAllConversations() {
         viewModelScope.launch {
             if (_isBound.value) {
                 try {
@@ -257,7 +257,7 @@ class MainViewModel @Inject constructor(application: Application) : AndroidViewM
         getSharedPreferences().edit().putInt("Conversation Id", conversationId).apply()
     }
     
-    private fun getCurrentConversationId(): Int {
+    fun getCurrentConversationId(): Int {
         return getSharedPreferences().getInt("Conversation Id", -1)
     }
     
@@ -269,7 +269,7 @@ class MainViewModel @Inject constructor(application: Application) : AndroidViewM
         }.apply()
     }
     
-    private fun getReceiverId(): Int {
+    fun getReceiverId(): Int {
         return getSharedPreferences().getInt("receiverId", -1)
     }
     
@@ -285,7 +285,7 @@ class MainViewModel @Inject constructor(application: Application) : AndroidViewM
         Toast.makeText(getApplication(), message, Toast.LENGTH_SHORT).show()
     }
     
-    private fun getSharedPreferences() =
+    fun getSharedPreferences() =
         getApplication<Application>().getSharedPreferences("login_prefs", Context.MODE_PRIVATE)
     
     fun deleteConversation(conversation: Conversation) {
