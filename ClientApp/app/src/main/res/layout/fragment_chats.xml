@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     tools:context=".ui.ChatsFragment">
 
@@ -20,19 +20,18 @@
             android:layout_height="match_parent"
             android:layout_marginStart="24dp"
             android:layout_marginEnd="24dp"
-            android:visibility="gone"
-            >
+            android:visibility="gone">
 
             <androidx.appcompat.widget.SearchView
                 android:id="@+id/searchView"
                 android:layout_width="0dp"
                 android:layout_height="50dp"
-                android:layout_weight="1"
                 android:layout_gravity="center_vertical"
+                android:layout_weight="1"
                 android:background="@drawable/search_view_bg"
                 android:queryHint="Search"
-                app:iconifiedByDefault="false"
                 app:closeIcon="@drawable/ic_close"
+                app:iconifiedByDefault="false"
                 app:queryBackground="@android:color/transparent" />
 
             <ImageView
@@ -40,22 +39,11 @@
                 android:layout_width="50dp"
                 android:layout_height="50dp"
                 android:layout_gravity="end|center_vertical"
+                android:layout_marginStart="16dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/chats_content_description_ic_close"
-                android:src="@drawable/ic_close"
-                android:layout_marginStart="16dp"/>
+                android:src="@drawable/ic_close" />
         </LinearLayout>
-
-        <ImageView
-            android:id="@+id/ivSearch"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:layout_gravity="end|center_vertical"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="@string/chats_content_description_ic_search"
-            android:src="@drawable/ic_search"
-            android:layout_marginEnd="24dp"/>
-
 
     </androidx.appcompat.widget.Toolbar>
 

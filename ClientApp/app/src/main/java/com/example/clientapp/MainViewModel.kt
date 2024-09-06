@@ -36,27 +36,35 @@ class MainViewModel @Inject constructor(application: Application) : AndroidViewM
     
     private val _conversationsFlow = MutableStateFlow<List<Conversation>>(emptyList())
     val conversationsFlow = _conversationsFlow.asStateFlow()
-    private val conversationCallback = object : IConversationCallback.Stub() {
-        override fun onConversationsUpdated(conversations: List<Conversation>) {
-            val userId = getUserIdFromSharedPreferences()
-            if (userId != -1) {
-                fetchAllConversations(userId)
-            }
-        }
-    }
     
     private val _messagesFlow = MutableStateFlow<List<Message>>(emptyList())
     val messagesFlow = _messagesFlow.asStateFlow()
     
+    private var _deleteMode = false
+    val deleteMode: Boolean get() = _deleteMode
+    
+    private val _selectedMessages = mutableListOf<Message>()
+    val selectedMessages: List<Message> get() = _selectedMessages
+    
+    private val conversationCallback = object : IConversationCallback.Stub() {
+        override fun onConversationsUpdated(conversations: List<Conversation>) {
+            fetchAllConversations()
+        }
+    }
+    
     private val messageCallback = object : IMessageCallback.Stub() {
         override fun onMessageReceived(message: Message) {
             viewModelScope.launch {
-                val currentConversationId = getCurrentConversationIdFromPreferences()
-                if (message.chatId == currentConversationId) {
-                    val updatedMessages = _messagesFlow.value.toMutableList()
-                    updatedMessages.add(message)
-                    _messagesFlow.value = updatedMessages
+                if (message.chatId == getCurrentConversationId()) {
+                    _messagesFlow.value += message
                 }
+            }
+        }
+        
+        override fun onMessageDeleted(messageId: Int) {
+            viewModelScope.launch {
+                _messagesFlow.value = _messagesFlow.value.filter { it.messageId != messageId }
+                Log.d("ClientApp", "Message with ID $messageId has been deleted.")
             }
         }
     }
@@ -68,17 +76,13 @@ class MainViewModel @Inject constructor(application: Application) : AndroidViewM
             _isBound.value = true
             chatService?.registerConversationCallback(conversationCallback)
             chatService?.registerMessageCallback(messageCallback)
-            val userId = getUserIdFromSharedPreferences()
-            if (userId != -1) {
-                fetchAllConversations(userId)
-            }
+            fetchAllConversations()
         }
         
         override fun onServiceDisconnected(name: ComponentName) {
             try {
                 chatService?.unregisterConversationCallback(conversationCallback)
                 chatService?.unregisterMessageCallback(messageCallback)
-                Log.d("Test", "onServiceDisconnected: Oke")
             } catch (e: DeadObjectException) {
                 Log.w(
                     "ClientApp", "Service already disconnected. Unable to unregister callback.", e
@@ -92,12 +96,26 @@ class MainViewModel @Inject constructor(application: Application) : AndroidViewM
         }
     }
     
-    private fun fetchAllConversations(userId: Int) {
+    private fun fetchAllConversations() {
         viewModelScope.launch {
             if (_isBound.value) {
                 try {
-                    val initialConversations = chatService?.getAllConversationsForUser(userId)
-                    _conversationsFlow.value = initialConversations ?: emptyList()
+                    _conversationsFlow.value =
+                        chatService?.getAllConversationsForUser(getUserId()) ?: emptyList()
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+        }
+    }
+    
+    private fun fetchMessagesForConversation(conversationId: Int) {
+        viewModelScope.launch {
+            if (_isBound.value) {
+                try {
+                    _messagesFlow.value =
+                        chatService?.getMessagesForConversation(conversationId) ?: emptyList()
+                    saveCurrentConversationId(conversationId)
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
@@ -127,8 +145,9 @@ class MainViewModel @Inject constructor(application: Application) : AndroidViewM
         return if (_isBound.value) {
             try {
                 chatService?.login(username, password)?.also { user ->
-                    saveUserIdToSharedPreferences(user.id)
-                    fetchAllConversations(user.id)
+                    saveUserId(user.id)
+                    saveCurrentUserInformation(user)
+                    fetchAllConversations()
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -137,6 +156,23 @@ class MainViewModel @Inject constructor(application: Application) : AndroidViewM
         } else {
             null
         }
+    }
+    
+    private fun saveCurrentUserInformation(user: User) {
+        val sharedPreferences = getSharedPreferences()
+        sharedPreferences.edit().apply {
+            putString("User Name", user.name)
+            putString("User Image", user.image)
+            putString("User Username", user.username)
+        }.apply()
+    }
+    
+    fun getCurrentUser(): User {
+        val sharedPreferences = getSharedPreferences()
+        val name = sharedPreferences.getString("User Name", "") ?: ""
+        val image = sharedPreferences.getString("User Image", "") ?: ""
+        val username = sharedPreferences.getString("User Username", "") ?: ""
+        return User(0, name, username, "", image)
     }
     
     fun registerUser(name: String, username: String, password: String, profileImageUri: Uri) {
@@ -151,63 +187,7 @@ class MainViewModel @Inject constructor(application: Application) : AndroidViewM
                     }
                     val user = User(0, name = name, username, password, imageString)
                     val status = chatService?.addUser(user)
-                    when (status) {
-                        1 -> {
-                            Log.d("ClientApp", "User added successfully")
-                            Toast.makeText(
-                                getApplication(), "User added successfully", Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                        
-                        2 -> {
-                            Log.d("ClientApp", "Failed to add user")
-                            Toast.makeText(
-                                getApplication(),
-                                "Failed to add user because of duplicate username",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                        
-                        else -> {
-                            Log.d("ClientApp", "Failed to add user")
-                            Toast.makeText(
-                                getApplication(), "Failed to add user", Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                    }
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
-            }
-        }
-        
-    }
-    
-    fun getUserById(user1: Int, user2: Int): User {
-        val currentUser = getUserIdFromSharedPreferences()
-        val queryUser = if (currentUser == user1) user2 else user1
-        return chatService?.getUserById(queryUser) ?: User(0, "", "", "", "")
-    }
-    
-    private fun saveUserIdToSharedPreferences(userId: Int) {
-        val sharedPreferences =
-            getApplication<Application>().getSharedPreferences("login_prefs", Context.MODE_PRIVATE)
-        sharedPreferences.edit().putInt("User Id", userId).apply()
-    }
-    
-    fun getUserIdFromSharedPreferences(): Int {
-        val sharedPreferences =
-            getApplication<Application>().getSharedPreferences("login_prefs", Context.MODE_PRIVATE)
-        return sharedPreferences.getInt("User Id", -1)
-    }
-    
-    private fun fetchMessagesForConversation(conversationId: Int) {
-        viewModelScope.launch {
-            if (_isBound.value) {
-                try {
-                    val messages = chatService?.getMessagesForConversation(conversationId)
-                    _messagesFlow.value = messages ?: emptyList()
-                    saveCurrentConversationIdToPreferences(conversationId)
+                    handleRegistrationStatus(status)
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
@@ -216,17 +196,14 @@ class MainViewModel @Inject constructor(application: Application) : AndroidViewM
     }
     
     fun sendMessage(content: String) {
-        val chatId = getCurrentConversationIdFromPreferences()
-        val senderId = getUserIdFromSharedPreferences()
-        val receiverId = getReceiverId()
         viewModelScope.launch {
             if (_isBound.value) {
                 try {
                     val message = Message(
                         messageId = 0,
-                        chatId = chatId,
-                        senderId = senderId,
-                        receiverId = receiverId,
+                        chatId = getCurrentConversationId(),
+                        senderId = getUserId(),
+                        receiverId = getReceiverId(),
                         content = content,
                         timestamp = System.currentTimeMillis()
                     )
@@ -238,46 +215,139 @@ class MainViewModel @Inject constructor(application: Application) : AndroidViewM
         }
     }
     
-    private fun saveCurrentConversationIdToPreferences(conversationId: Int) {
-        val sharedPreferences =
-            getApplication<Application>().getSharedPreferences("login_prefs", Context.MODE_PRIVATE)
-        sharedPreferences.edit().putInt("Conversation Id", conversationId).apply()
-    }
-    
-    private fun getCurrentConversationIdFromPreferences(): Int {
-        val sharedPreferences =
-            getApplication<Application>().getSharedPreferences("login_prefs", Context.MODE_PRIVATE)
-        return sharedPreferences.getInt("Conversation Id", -1)
-    }
-    
     fun saveCurrentConversation(conversation: Conversation) {
-        val conversationId = conversation.conversationId
-        fetchMessagesForConversation(conversationId)
+        fetchMessagesForConversation(conversation.conversationId)
         val receiver = getUserById(conversation.user1Id, conversation.user2Id)
-        val receiverName = receiver.name
-        val receiverImage = receiver.image
-        val sharedPreferences =
-            getApplication<Application>().getSharedPreferences("login_prefs", Context.MODE_PRIVATE)
-        sharedPreferences.edit().putInt("receiverId", receiver.id).apply()
-        sharedPreferences.edit().putString("Receiver Name", receiverName).apply()
-        sharedPreferences.edit().putString("Receiver Image", receiverImage).apply()
+        saveReceiverInfo(receiver)
     }
     
-    fun getReceiverId(): Int {
-        val sharedPreferences =
-            getApplication<Application>().getSharedPreferences("login_prefs", Context.MODE_PRIVATE)
-        return sharedPreferences.getInt("receiverId", -1)
+    fun getUserById(user1: Int, user2: Int): User {
+        val queryUser = if (getUserId() == user1) user2 else user1
+        return chatService?.getUserById(queryUser) ?: User(0, "", "", "", "")
+    }
+    
+    private fun handleRegistrationStatus(status: Int?) {
+        when (status) {
+            1 -> {
+                Log.d("ClientApp", "User added successfully")
+                showToast("User added successfully")
+            }
+            
+            2 -> {
+                Log.d("ClientApp", "Failed to add user due to duplicate username")
+                showToast("Failed to add user due to duplicate username")
+            }
+            
+            else -> {
+                Log.d("ClientApp", "Failed to add user")
+                showToast("Failed to add user")
+            }
+        }
+    }
+    
+    private fun saveUserId(userId: Int) {
+        getSharedPreferences().edit().putInt("User Id", userId).apply()
+    }
+    
+    fun getUserId(): Int {
+        return getSharedPreferences().getInt("User Id", -1)
+    }
+    
+    private fun saveCurrentConversationId(conversationId: Int) {
+        getSharedPreferences().edit().putInt("Conversation Id", conversationId).apply()
+    }
+    
+    private fun getCurrentConversationId(): Int {
+        return getSharedPreferences().getInt("Conversation Id", -1)
+    }
+    
+    private fun saveReceiverInfo(receiver: User) {
+        getSharedPreferences().edit().apply {
+            putInt("receiverId", receiver.id)
+            putString("Receiver Name", receiver.name)
+            putString("Receiver Image", receiver.image)
+        }.apply()
+    }
+    
+    private fun getReceiverId(): Int {
+        return getSharedPreferences().getInt("receiverId", -1)
     }
     
     fun getReceiverName(): String {
-        val sharedPreferences =
-            getApplication<Application>().getSharedPreferences("login_prefs", Context.MODE_PRIVATE)
-        return sharedPreferences.getString("Receiver Name", "") ?: ""
+        return getSharedPreferences().getString("Receiver Name", "") ?: ""
     }
     
     fun getReceiverImage(): String {
-        val sharedPreferences =
-            getApplication<Application>().getSharedPreferences("login_prefs", Context.MODE_PRIVATE)
-        return sharedPreferences.getString("Receiver Image", "") ?: ""
+        return getSharedPreferences().getString("Receiver Image", "") ?: ""
+    }
+    
+    private fun showToast(message: String) {
+        Toast.makeText(getApplication(), message, Toast.LENGTH_SHORT).show()
+    }
+    
+    private fun getSharedPreferences() =
+        getApplication<Application>().getSharedPreferences("login_prefs", Context.MODE_PRIVATE)
+    
+    fun deleteConversation(conversation: Conversation) {
+        viewModelScope.launch {
+            if (_isBound.value) {
+                try {
+                    chatService?.deleteConversation(conversation.conversationId, getUserId())
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+        }
+    }
+    
+    fun getVisibleLastMessage(conversation: Conversation): Message {
+        if (_isBound.value) {
+            try {
+                val userId = getUserId()
+                val message = chatService?.getMessageById(conversation.conversationId, userId)
+                Log.d(
+                    "last message", "getVisibleLastMessage: ${message} , current user id: $userId"
+                )
+                return message ?: Message(0, 0, 0, 0, "", 0)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+        return Message(0, 0, 0, 0, "", 0)
+    }
+    
+    fun toggleDeleteMode() {
+        _deleteMode = !_deleteMode
+    }
+    
+    fun addMessageToSelection(message: Message) {
+        _selectedMessages.add(message)
+    }
+    
+    fun removeMessageFromSelection(message: Message) {
+        _selectedMessages.remove(message)
+    }
+    
+    fun clearSelectedMessages() {
+        _selectedMessages.clear()
+    }
+    
+    fun deleteSelectedMessages() {
+        viewModelScope.launch {
+            if (_isBound.value) {
+                try {
+                    val selectId = _selectedMessages.map { it.messageId }.toIntArray()
+                    chatService?.deleteMessages(selectId, getUserId())
+                    _selectedMessages.clear()
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+        }
+    }
+    
+    fun logout() {
+        getSharedPreferences().edit().clear().apply()
     }
 }
+

@@ -134,7 +134,6 @@ class ChatService : Service() {
         override fun sendMessage(message: Message?) {
             runBlocking {
                 if (message != null) {
-                    // Add the new message to the database
                     serverRepository.addMessage(message)
                     
                     // Notify all registered callbacks that a new message was received
@@ -190,6 +189,74 @@ class ChatService : Service() {
         override fun getMessagesForConversation(conversationId: Int): MutableList<Message> {
             return runBlocking {
                 serverRepository.getMessagesForConversation(conversationId).first().toMutableList()
+            }
+        }
+        
+        override fun deleteConversation(conversationId: Int, userId: Int) {
+            runBlocking {
+                val messages = serverRepository.getMessagesForConversation(conversationId).first()
+                    .toMutableList()
+                
+                messages.forEach { message ->
+                    val updatedMessage = if (message.senderId == userId) {
+                        message.copy(isDeletedBySender = true)
+                    } else {
+                        message.copy(isDeletedByReceiver = true)
+                    }
+                    serverRepository.updateMessage(updatedMessage)
+                    
+                    if (updatedMessage.isDeletedBySender && updatedMessage.isDeletedByReceiver) {
+                        serverRepository.deleteMessage(updatedMessage.messageId)
+                    }
+                }
+                val updatedConversation =
+                    serverRepository.getAllConversationsForUser(userId).first().firstOrNull {
+                        it.conversationId == conversationId
+                    }?.copy(lastMessageContent = "", lastMessageTimestamp = 0)
+                if (updatedConversation != null) {
+                    serverRepository.updateConversation(updatedConversation)
+                    val updatedConversations =
+                        serverRepository.getAllConversationsForUser(userId).first()
+                    emitConversationUpdate(updatedConversations)
+                }
+            }
+        }
+        
+        override fun getMessageById(conversationId: Int, userId: Int): Message {
+            return runBlocking {
+                serverRepository.getLatestVisibleMessage(conversationId).first().firstOrNull {
+                    (it.senderId == userId && !it.isDeletedBySender) || (it.receiverId == userId && !it.isDeletedByReceiver)
+                }
+                    ?: Message(0, 0, 0, 0, "", 0)
+            }
+        }
+        
+        override fun deleteMessages(messageIds: IntArray?, userId: Int) {
+            runBlocking {
+                messageIds?.forEach { messageId ->
+                    val message = serverRepository.getMessageById(messageId)
+                    val updatedMessage = if (message.senderId == userId) {
+                        message.copy(isDeletedBySender = true)
+                    } else {
+                        message.copy(isDeletedByReceiver = true)
+                    }
+                    serverRepository.updateMessage(updatedMessage)
+                    
+                    if (updatedMessage.isDeletedBySender && updatedMessage.isDeletedByReceiver) {
+                        serverRepository.deleteMessage(updatedMessage.messageId)
+                    }
+                    
+                    // Notify all clients that the message was deleted
+                    val count = messageCallbacks.beginBroadcast()
+                    for (i in 0 until count) {
+                        try {
+                            messageCallbacks.getBroadcastItem(i).onMessageDeleted(messageId)
+                        } catch (e: Exception) {
+                            Log.e("ChatService", "Error notifying client about message deletion", e)
+                        }
+                    }
+                    messageCallbacks.finishBroadcast()
+                }
             }
         }
     }
